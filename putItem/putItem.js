@@ -21,7 +21,10 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 //import s3putObject Function
-const { presignedPUTurl } = require("../BucketFunctions/S3BucketMethods");
+const {
+  presignedPUTurl,
+  presignedGETurl,
+} = require("../BucketFunctions/S3BucketMethods");
 
 const { credentials, jwtSecretKey } = require("../config");
 const doClient = new AWS.DynamoDB.DocumentClient(credentials);
@@ -31,77 +34,117 @@ const uniqueId = uuidv4();
 router.put("/putItem", upload.single("imageUpload"), (req, res) => {
   const { itemDescription } = req.body;
   const requestToken = req.cookies.token;
-  const verify = jwt.verify(requestToken, jwtSecretKey);
-  const tableNameSpace = verify.dynamoDBuserTable;
-  const dateTime = new Date().toISOString();
 
-  if (itemDescription && req.file.filename) {
-    const payload = {
-      id: uniqueId,
-      description: itemDescription,
-      image: req.file.filename,
-      dateCreated: dateTime,
-      dateUpdated: dateTime,
-    };
-
-    const presignedUrl = presignedPUTurl(
-      "node-server-bucket",
-      req.file.filename,
-      1000 * 60
-    );
-
-    fs.readFile(`./imageUpload/${req.file.filename}`, (err, result) => {
+  if (!requestToken) {
+    fs.unlink(`./imageUpload/${req.file.filename}`, (err) => {
       if (err) {
         res.status(400).send({
           success: false,
-          message: "image could not be read",
+          message: "please log in, your access credentials has expired",
         });
       }
-      if (result) {
-        axios
-          .put(presignedUrl, result)
-          .then((response) => {
-            doClient.put(
-              {
-                TableName: tableNameSpace,
-                Item: payload,
-              },
-              (err, result) => {
-                if (err) {
-                  res.status(400).send({
-                    success: false,
-                    message: "could not input new record into DB",
-                  });
-                }
-                if (result) {
-                  res.status(200).send({
-                    success: true,
-                    message: "record upload into dynamoDB is successfully ",
-                    data: {
-                      imagePath: req.file.filename,
-                    },
-                  });
-                }
-              }
-            );
-          })
-          .catch((error) => {
-            res.status(400).send({
-              success: false,
-              message: "image could not be uploaded so s3",
-            });
+      res.status(400).send({
+        success: false,
+        message: "please log in, your access credentials has expired",
+      });
+    });
+  }
+  if (requestToken) {
+    const verify = jwt.verify(requestToken, jwtSecretKey);
+    const tableNameSpace = verify.dynamoDBuserTable;
+    const dateTime = new Date().toISOString();
+
+    if (itemDescription && req.file.filename) {
+      const payload = {
+        id: uniqueId,
+        description: itemDescription,
+        image: req.file.filename,
+        dateCreated: dateTime,
+        dateUpdated: dateTime,
+      };
+
+      const presignedUrl = presignedPUTurl(
+        "node-server-bucket",
+        req.file.filename,
+        1000 * 60
+      );
+
+      fs.readFile(`./imageUpload/${req.file.filename}`, (err, result) => {
+        if (err) {
+          res.status(400).send({
+            success: false,
+            message: "image could not be read",
           });
-      }
-    });
-  } else {
-    res.status(400).send({
-      success: false,
-      message: "invalid request body, please upload through formData",
-      data: {
-        itemDescription: "post description is required",
-        imageUpload: "'imageUpload:' --> for the image name is required",
-      },
-    });
+        }
+        if (result) {
+          axios
+            .put(presignedUrl, result)
+            .then((response) => {
+              doClient.put(
+                {
+                  TableName: tableNameSpace,
+                  Item: payload,
+                },
+                (err, result) => {
+                  if (err) {
+                    res.status(400).send({
+                      success: false,
+                      message: "could not input new record into DB",
+                    });
+                  }
+                  if (result) {
+                    const url = presignedGETurl(
+                      "node-server-bucket",
+                      req.file.filename,
+                      1000 * 60
+                    );
+                    fs.unlink(`./imageUpload/${req.file.filename}`, (err) => {
+                      if (err) {
+                        res.status(200).send({
+                          success: true,
+                          message:
+                            "record upload into dynamoDB is successfully ",
+                          data: {
+                            message: "could not unlink file from file system ",
+                            postDescription: itemDescription,
+                            url: url,
+                            date: dateTime,
+                          },
+                        });
+                      }
+                      res.status(200).send({
+                        success: true,
+                        message: "record upload into dynamoDB is successfully ",
+                        data: {
+                          message: "file unlink was successful ",
+                          postDescription: itemDescription,
+                          url: url,
+                          date: dateTime,
+                        },
+                      });
+                    });
+                  }
+                }
+              );
+            })
+            .catch((error) => {
+              res.status(400).send({
+                success: false,
+                message: "image could not be uploaded so s3",
+              });
+            });
+        }
+      });
+    } else {
+      res.status(400).send({
+        success: false,
+        message: "invalid request body, please upload through formData",
+        data: {
+          itemDescription: "post description is required",
+          imageUpload: "'imageUpload:' --> for the image name is required",
+        },
+      });
+    }
   }
 });
 
