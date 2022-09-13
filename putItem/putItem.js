@@ -52,20 +52,13 @@ router.put("/putItem", upload.single("imageUpload"), (req, res) => {
   if (requestToken) {
     const verify = jwt.verify(requestToken, jwtSecretKey);
     const tableNameSpace = verify.dynamoDBuserTable;
+    const userId = verify.id;
     const dateTime = new Date().toISOString();
 
     if (itemDescription && req.file.filename) {
-      const payload = {
-        id: uniqueId,
-        description: itemDescription,
-        image: req.file.filename,
-        dateCreated: dateTime,
-        dateUpdated: dateTime,
-      };
-
       const presignedUrl = presignedPUTurl(
         "node-server-bucket",
-        req.file.filename,
+        `userUploads/${userId}/${req.file.filename}`,
         1000 * 60
       );
 
@@ -80,6 +73,13 @@ router.put("/putItem", upload.single("imageUpload"), (req, res) => {
           axios
             .put(presignedUrl, result)
             .then((response) => {
+              const payload = {
+                id: uniqueId,
+                description: itemDescription,
+                image: req.file.filename,
+                dateCreated: dateTime,
+                dateUpdated: dateTime,
+              };
               doClient.put(
                 {
                   TableName: tableNameSpace,
@@ -95,7 +95,7 @@ router.put("/putItem", upload.single("imageUpload"), (req, res) => {
                   if (result) {
                     const url = presignedGETurl(
                       "node-server-bucket",
-                      req.file.filename,
+                      `userUploads/${userId}/${req.file.filename}`,
                       1000 * 60
                     );
                     fs.unlink(`./imageUpload/${req.file.filename}`, (err) => {
