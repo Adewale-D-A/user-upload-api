@@ -42,13 +42,13 @@ router.get("/getAllItems", (req, res) => {
         if (data) {
           let stringifyDataSet = JSON.stringify(data.Items);
           var result = JSON.parse(stringifyDataSet, (key, value) => {
-            if (key === "image") {
-              const imageUrl = presignedGETurl(
+            if (key === "mediaUpload") {
+              const mediaUrl = presignedGETurl(
                 "node-server-bucket",
                 `userUploads/${userId}/${value}`,
                 1000 * 60
               );
-              return imageUrl;
+              return mediaUrl;
             } else {
               return value;
             }

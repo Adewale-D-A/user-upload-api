@@ -21,22 +21,24 @@ const put = require("./putItem/putItem");
 const query = require("./queryTable/queryTable");
 const update = require("./updateItem/updateItem");
 
+//ACTIVE ENDPOINTS
+//getAllItems endpoint
+app.use("/getAll", getAll);
+//put item into table endpoint
+app.use("/put", put);
+
 //delete table endpoint
 app.use("/deleteTable", delTable);
 //delete item in a table endpoint
 app.use("/deleteItem", delItem);
-//getAllItems endpoint
-app.use("/getAll", getAll);
 //get a single Item endpoint
 app.use("/get", get);
-//put item into table endpoint
-app.use("/put", put);
 //query item endpoint
 app.use("/query", query);
 //update item endpoint
 app.use("/update", update);
 
-app.post("/", (req, res) => {
+app.get("/", (req, res) => {
   res.status(200).send("Welcome to user upload landing");
 });
 

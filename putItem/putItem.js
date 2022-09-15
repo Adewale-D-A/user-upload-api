@@ -11,7 +11,7 @@ const fs = require("fs");
 //set storage folder and upload name
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "./imageUpload");
+    cb(null, "./mediaUpload");
   },
   filename: (req, file, cb) => {
     cb(null, Date.now() + path.extname(file.originalname));
@@ -31,12 +31,12 @@ const doClient = new AWS.DynamoDB.DocumentClient(credentials);
 
 const uniqueId = uuidv4();
 
-router.put("/putItem", upload.single("imageUpload"), (req, res) => {
+router.put("/putItem", upload.single("mediaUpload"), (req, res) => {
   const { itemDescription } = req.body;
   const requestToken = req.cookies.token;
 
   if (!requestToken) {
-    fs.unlink(`./imageUpload/${req.file.filename}`, (err) => {
+    fs.unlink(`./mediaUpload/${req.file.filename}`, (err) => {
       if (err) {
         res.status(400).send({
           success: false,
@@ -62,7 +62,7 @@ router.put("/putItem", upload.single("imageUpload"), (req, res) => {
         1000 * 60
       );
 
-      fs.readFile(`./imageUpload/${req.file.filename}`, (err, result) => {
+      fs.readFile(`./mediaUpload/${req.file.filename}`, (err, result) => {
         if (err) {
           res.status(400).send({
             success: false,
@@ -76,7 +76,8 @@ router.put("/putItem", upload.single("imageUpload"), (req, res) => {
               const payload = {
                 id: uniqueId,
                 description: itemDescription,
-                image: req.file.filename,
+                mediaUpload: req.file.filename,
+                filetype: req.file.mimetype,
                 dateCreated: dateTime,
                 dateUpdated: dateTime,
               };
@@ -98,7 +99,7 @@ router.put("/putItem", upload.single("imageUpload"), (req, res) => {
                       `userUploads/${userId}/${req.file.filename}`,
                       1000 * 60
                     );
-                    fs.unlink(`./imageUpload/${req.file.filename}`, (err) => {
+                    fs.unlink(`./mediaUpload/${req.file.filename}`, (err) => {
                       if (err) {
                         res.status(200).send({
                           success: true,
@@ -108,6 +109,7 @@ router.put("/putItem", upload.single("imageUpload"), (req, res) => {
                             message: "could not unlink file from file system ",
                             postDescription: itemDescription,
                             url: url,
+                            filetype: req.file.mimetype,
                             date: dateTime,
                           },
                         });
@@ -119,6 +121,7 @@ router.put("/putItem", upload.single("imageUpload"), (req, res) => {
                           message: "file unlink was successful ",
                           postDescription: itemDescription,
                           url: url,
+                          filetype: req.file.mimetype,
                           date: dateTime,
                         },
                       });
@@ -141,7 +144,7 @@ router.put("/putItem", upload.single("imageUpload"), (req, res) => {
         message: "invalid request body, please upload through formData",
         data: {
           itemDescription: "post description is required",
-          imageUpload: "'imageUpload:' --> for the image name is required",
+          mediaUpload: "media file is required",
         },
       });
     }
