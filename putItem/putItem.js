@@ -29,8 +29,6 @@ const {
 const { credentials, jwtSecretKey } = require("../config");
 const doClient = new AWS.DynamoDB.DocumentClient(credentials);
 
-const uniqueId = uuidv4();
-
 router.put("/putItem", upload.single("mediaUpload"), (req, res) => {
   const { itemDescription } = req.body;
   const requestToken = req.cookies.token;
@@ -74,7 +72,7 @@ router.put("/putItem", upload.single("mediaUpload"), (req, res) => {
             .put(presignedUrl, result)
             .then((response) => {
               const payload = {
-                id: uniqueId,
+                id: uuidv4(),
                 description: itemDescription,
                 mediaUpload: req.file.filename,
                 filetype: req.file.mimetype,
