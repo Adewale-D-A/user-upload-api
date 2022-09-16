@@ -54,166 +54,269 @@ router.put("/putItem", upload.single("mediaUpload"), (req, res) => {
     const userId = verify.id;
     const dateTime = new Date().toISOString();
 
-    if (itemDescription && req.file.filename) {
-      Jimp.read(`./mediaUpload/${req.file.filename}`, (err, thumbnail) => {
-        if (err) {
-          res.status(400).send({
-            success: false,
-            message: "failed to create a thumbnail",
-          });
-        }
-        if (thumbnail) {
-          thumbnail
-            .resize(Jimp.AUTO, 256) // resize
-            .quality(20) // set JPEG quality
-            .write(`./mediaUpload/thumbnail${req.file.filename}`); // save
+    if (itemDescription && req.file.mimetype.match("image")) {
+      const mimetype = req.file.mimetype.toLowerCase();
+      if (
+        mimetype === "image/jpeg" ||
+        mimetype === "image/jpg" ||
+        mimetype === "image/png" ||
+        mimetype === "image/bmp" ||
+        mimetype === "image/tiff" ||
+        mimetype === "image/gif"
+      ) {
+        Jimp.read(`./mediaUpload/${req.file.filename}`, (err, thumbnail) => {
+          if (err) {
+            res.status(400).send({
+              success: false,
+              message: "failed to create a thumbnail",
+            });
+          }
+          if (thumbnail) {
+            thumbnail
+              .resize(Jimp.AUTO, 256) // resize
+              .quality(20) // set JPEG quality
+              .write(`./mediaUpload/thumbnail${req.file.filename}`); // save
 
-          const presignedUrl = presignedPUTurl(
-            "node-server-bucket",
-            `userUploads/${userId}/${req.file.filename}`,
-            1000 * 60
-          );
-          const ThumbnailpresignedUrl = presignedPUTurl(
-            "node-server-bucket",
-            `userUploads/${userId}/thumbnail${req.file.filename}`,
-            1000 * 60
-          );
-          fs.readFile(`./mediaUpload/${req.file.filename}`, (err, result) => {
-            if (err) {
-              res.status(400).send({
-                success: false,
-                message: "image could not be read",
-              });
-            }
-            if (result) {
-              axios
-                .put(presignedUrl, result)
-                .then((response) => {
-                  fs.readFile(
-                    `./mediaUpload/thumbnail${req.file.filename}`,
-                    (err, thumbnail) => {
-                      if (err) {
-                        res.status(400).send({
-                          success: false,
-                          message: "image could not be read",
-                        });
-                      }
-                      if (thumbnail) {
-                        axios
-                          .put(ThumbnailpresignedUrl, thumbnail)
-                          .then((response) => {
-                            const payload = {
-                              id: uuidv4(),
-                              description: itemDescription,
-                              mediaUpload: req.file.filename,
-                              mediaThumbnail: `thumbnail${req.file.filename}`,
-                              filetype: req.file.mimetype,
-                              dateCreated: dateTime,
-                              dateUpdated: dateTime,
-                            };
-                            doClient.put(
-                              {
-                                TableName: tableNameSpace,
-                                Item: payload,
-                              },
-                              (err, result) => {
-                                if (err) {
-                                  res.status(400).send({
-                                    success: false,
-                                    message:
-                                      "could not input new record into DB",
-                                  });
-                                }
-                                if (result) {
-                                  const url = presignedGETurl(
-                                    "node-server-bucket",
-                                    `userUploads/${userId}/${req.file.filename}`,
-                                    1000 * 60
-                                  );
+            const presignedUrl = presignedPUTurl(
+              "node-server-bucket",
+              `userUploads/${userId}/${req.file.filename}`,
+              1000 * 60
+            );
+            const ThumbnailpresignedUrl = presignedPUTurl(
+              "node-server-bucket",
+              `userUploads/${userId}/thumbnail${req.file.filename}`,
+              1000 * 60
+            );
+            fs.readFile(`./mediaUpload/${req.file.filename}`, (err, result) => {
+              if (err) {
+                res.status(400).send({
+                  success: false,
+                  message: "image could not be read",
+                });
+              }
+              if (result) {
+                axios
+                  .put(presignedUrl, result)
+                  .then((response) => {
+                    fs.readFile(
+                      `./mediaUpload/thumbnail${req.file.filename}`,
+                      (err, thumbnail) => {
+                        if (err) {
+                          res.status(400).send({
+                            success: false,
+                            message: "image could not be read",
+                          });
+                        }
+                        if (thumbnail) {
+                          axios
+                            .put(ThumbnailpresignedUrl, thumbnail)
+                            .then((response) => {
+                              const payload = {
+                                id: uuidv4(),
+                                description: itemDescription,
+                                mediaUpload: req.file.filename,
+                                mediaThumbnail: `thumbnail${req.file.filename}`,
+                                filetype: req.file.mimetype,
+                                dateCreated: dateTime,
+                                dateUpdated: dateTime,
+                              };
+                              doClient.put(
+                                {
+                                  TableName: tableNameSpace,
+                                  Item: payload,
+                                },
+                                (err, result) => {
+                                  if (err) {
+                                    res.status(400).send({
+                                      success: false,
+                                      message:
+                                        "could not input new record into DB",
+                                    });
+                                  }
+                                  if (result) {
+                                    const url = presignedGETurl(
+                                      "node-server-bucket",
+                                      `userUploads/${userId}/${req.file.filename}`,
+                                      1000 * 60
+                                    );
 
-                                  const thumbnailUrl = presignedGETurl(
-                                    "node-server-bucket",
-                                    `userUploads/${userId}/thumbnail${req.file.filename}`,
-                                    1000 * 60
-                                  );
-                                  fs.unlink(
-                                    `./mediaUpload/${req.file.filename}`,
-                                    (err) => {
-                                      if (err) {
-                                        res.status(200).send({
-                                          success: true,
-                                          message:
-                                            "record upload into dynamoDB is successfully ",
-                                          data: {
-                                            message:
-                                              "could not unlink file from file system ",
-                                            postDescription: itemDescription,
-                                            url: url,
-                                            thumbnailUrl: thumbnailUrl,
-                                            filetype: req.file.mimetype,
-                                            date: dateTime,
-                                          },
-                                        });
-                                      }
-                                      fs.unlink(
-                                        `./mediaUpload/thumbnail${req.file.filename}`,
-                                        (err) => {
-                                          if (err) {
-                                            res.status(200).send({
-                                              success: true,
-                                              message:
-                                                "record upload into dynamoDB is successfully ",
-                                              data: {
-                                                message:
-                                                  "could not unlink thumbnail file from file system ",
-                                                postDescription:
-                                                  itemDescription,
-                                                url: url,
-                                                thumbnailUrl: thumbnailUrl,
-                                                filetype: req.file.mimetype,
-                                                date: dateTime,
-                                              },
-                                            });
-                                          }
+                                    const thumbnailUrl = presignedGETurl(
+                                      "node-server-bucket",
+                                      `userUploads/${userId}/thumbnail${req.file.filename}`,
+                                      1000 * 60
+                                    );
+                                    fs.unlink(
+                                      `./mediaUpload/${req.file.filename}`,
+                                      (err) => {
+                                        if (err) {
                                           res.status(200).send({
                                             success: true,
                                             message:
                                               "record upload into dynamoDB is successfully ",
                                             data: {
                                               message:
-                                                "file unlink was successful ",
+                                                "could not unlink file from file system ",
                                               postDescription: itemDescription,
                                               url: url,
+                                              thumbnailUrl: thumbnailUrl,
                                               filetype: req.file.mimetype,
                                               date: dateTime,
                                             },
                                           });
                                         }
-                                      );
-                                    }
-                                  );
+                                        fs.unlink(
+                                          `./mediaUpload/thumbnail${req.file.filename}`,
+                                          (err) => {
+                                            if (err) {
+                                              res.status(200).send({
+                                                success: true,
+                                                message:
+                                                  "record upload into dynamoDB is successfully ",
+                                                data: {
+                                                  message:
+                                                    "could not unlink thumbnail file from file system ",
+                                                  postDescription:
+                                                    itemDescription,
+                                                  url: url,
+                                                  thumbnailUrl: thumbnailUrl,
+                                                  filetype: req.file.mimetype,
+                                                  date: dateTime,
+                                                },
+                                              });
+                                            }
+                                            res.status(200).send({
+                                              success: true,
+                                              message:
+                                                "record upload into dynamoDB is successfully ",
+                                              data: {
+                                                message:
+                                                  "file unlink was successful ",
+                                                postDescription:
+                                                  itemDescription,
+                                                url: url,
+                                                filetype: req.file.mimetype,
+                                                date: dateTime,
+                                              },
+                                            });
+                                          }
+                                        );
+                                      }
+                                    );
+                                  }
                                 }
-                              }
-                            );
-                          })
-                          .catch((err) => {
-                            res.status(400).send({
-                              success: false,
-                              message: "could not upload thumbnail to s3",
+                              );
+                            })
+                            .catch((err) => {
+                              res.status(400).send({
+                                success: false,
+                                message: "could not upload thumbnail to s3",
+                              });
                             });
-                          });
+                        }
                       }
-                    }
-                  );
-                })
-                .catch((error) => {
-                  res.status(400).send({
-                    success: false,
-                    message: "image could not be uploaded so s3",
+                    );
+                  })
+                  .catch((error) => {
+                    res.status(400).send({
+                      success: false,
+                      message: "image could not be uploaded so s3",
+                    });
                   });
-                });
-            }
+              }
+            });
+          }
+        });
+      } else {
+        res.status(400).send({
+          success: false,
+          message: "image format is not accepted",
+          data: {
+            accepted_image_format:
+              "image/jpg, image/png, image/jpeg, image/gif, image/tiff, image/bmp",
+          },
+        });
+      }
+    } else if (itemDescription && req.file.mimetype.match("video")) {
+      const presignedUrl = presignedPUTurl(
+        "node-server-bucket",
+        `userUploads/${userId}/${req.file.filename}`,
+        1000 * 60
+      );
+      fs.readFile(`./mediaUpload/${req.file.filename}`, (err, result) => {
+        if (err) {
+          res.status(400).send({
+            success: false,
+            message: "video data could not be read",
           });
+        }
+        if (result) {
+          axios
+            .put(presignedUrl, result)
+            .then((response) => {
+              const payload = {
+                id: uuidv4(),
+                description: itemDescription,
+                mediaUpload: req.file.filename,
+                filetype: req.file.mimetype,
+                dateCreated: dateTime,
+                dateUpdated: dateTime,
+              };
+              doClient.put(
+                {
+                  TableName: tableNameSpace,
+                  Item: payload,
+                },
+                (err, result) => {
+                  if (err) {
+                    res.status(400).send({
+                      success: false,
+                      message: "could not input new record into DB",
+                    });
+                  }
+                  if (result) {
+                    const url = presignedGETurl(
+                      "node-server-bucket",
+                      `userUploads/${userId}/${req.file.filename}`,
+                      1000 * 60
+                    );
+
+                    fs.unlink(`./mediaUpload/${req.file.filename}`, (err) => {
+                      if (err) {
+                        res.status(200).send({
+                          success: true,
+                          message:
+                            "record upload into dynamoDB is successfully ",
+                          data: {
+                            message: "could not unlink file from file system ",
+                            postDescription: itemDescription,
+                            url: url,
+                            filetype: req.file.mimetype,
+                            date: dateTime,
+                          },
+                        });
+                      }
+                      res.status(200).send({
+                        success: true,
+                        message: "data upload into db is successfully ",
+                        data: {
+                          message: "file unlink was successful",
+                          postDescription: itemDescription,
+                          url: url,
+                          filetype: req.file.mimetype,
+                          date: dateTime,
+                        },
+                      });
+                    });
+                  }
+                }
+              );
+            })
+            .catch((error) => {
+              res.status(400).send({
+                success: false,
+                message: "video could not be uploaded so s3",
+              });
+            });
         }
       });
     } else {
