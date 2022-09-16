@@ -49,6 +49,14 @@ router.get("/getAllItems", (req, res) => {
                 1000 * 60
               );
               return mediaUrl;
+            }
+            if (key === "mediaThumbnail") {
+              const thumbnailUrl = presignedGETurl(
+                "node-server-bucket",
+                `userUploads/${userId}/${value}`,
+                1000 * 60
+              );
+              return thumbnailUrl;
             } else {
               return value;
             }
