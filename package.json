@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon server.js",
-    "dev": "pm2 start server.js --name \"Upload API\" --watch",
+    "dev": "pm2 start server.js --name \"Upload API\" --watch --ignore-watch=\"mediaUpload\"",
     "prod": "pm2 start server.js --name \"Upload API\""
   },
   "keywords": [],
