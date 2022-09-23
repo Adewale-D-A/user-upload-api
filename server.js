@@ -39,7 +39,7 @@ app.use("/query", query);
 app.use("/update", update);
 
 app.get("/", (req, res) => {
-  res.status(200).send("Welcome to user upload landing");
+  res.status(200).send("User Upload API");
 });
 
 app.listen(4000, () => {
