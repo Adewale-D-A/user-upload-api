@@ -1,0 +1,70 @@
+// doClient = new AWS.DynamoDB.DocumentClient({jsonFormat})
+// dynamodb credentials
+  {
+    "accessKeyId": "*****",
+    "secretAccessKey": "*****",
+    "region": "us-east-1"
+  }
+
+  
+// const s3 = new AWS.S3(jsonCredentials);
+// s3 Bucket SDK credentials
+
+ {
+        "signatureVersion": "v4",
+        "apiVersion": "2006-03-01",
+        "accessKeyId": "******",
+        "secretAccessKey": "******"
+        }
+
+
+// mysql.createConnection(jsonCredentials)
+//mysql SDK authentication credentials
+
+    {
+    "host": "******",
+    "user": "****",
+    "password": "*****",
+    "database": "*****",
+    }
+
+
+// s3 bucket policy to allow programatic access
+{
+
+    "Version": "2012-10-17",
+    "Statement": [
+    
+    {
+    "Sid": "AddPerm",
+    "Effect": "Allow",
+     "Principal": "*",
+    "Action": "s3:*",
+     "Resource": "arn:aws:s3:::node-server-bucket/*"
+     }
+    ]
+}
+
+// s3 Cross-origin resource sharing (CORS)
+[
+    {
+    "AllowedHeaders": [   
+    "*"
+    ],
+    "AllowedMethods": [    
+    "PUT",
+    "POST",
+    "DELETE",
+    "GET"
+     ],
+    "AllowedOrigins": [
+        "*"
+     ],
+     "ExposeHeaders": []
+   }
+     ]
+
+// How to initiate an mysql for DB
+
+- On VPC Security tab on mysql DB tab and add inbound rule to include All trafic(0.0.0.0/00)
+- make db publicly accessible

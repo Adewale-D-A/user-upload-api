@@ -20,6 +20,7 @@ const get = require("./getItem/getItem");
 const put = require("./putItem/putItem");
 const query = require("./queryTable/queryTable");
 const update = require("./updateItem/updateItem");
+const batchGet = require("./batchGet/batchGet");
 
 //ACTIVE ENDPOINTS
 //getAllItems endpoint
@@ -42,6 +43,7 @@ app.get("/", (req, res) => {
   res.status(200).send("User Upload API");
 });
 
-app.listen(4000, () => {
+const port = process.env.port || 4000;
+app.listen(port, () => {
   console.log("server is listening on port 4000...");
 });
