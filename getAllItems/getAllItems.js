@@ -11,7 +11,6 @@ const { presignedGETurl } = require("../BucketFunctions/S3BucketMethods");
 
 router.get("/getAllItems", (req, res) => {
   const requestToken = req.get("Authorization")?.split(" ")[1];
-  console.log(requestToken);
   if (!requestToken) {
     res.status(400).send({
       success: false,
@@ -19,7 +18,6 @@ router.get("/getAllItems", (req, res) => {
     });
   }
   if (requestToken) {
-    console.log("got here");
     jwt.verify(requestToken, jwtSecretKey, (err, decode) => {
       if (err) {
         console.log("error");
@@ -29,10 +27,8 @@ router.get("/getAllItems", (req, res) => {
         });
       }
       if (decode) {
-        console.log(decode);
         const tableNameSpace = decode.dynamoDBuserTable;
         const userId = decode.id;
-        console.log("here now");
 
         doClient.scan(
           {
