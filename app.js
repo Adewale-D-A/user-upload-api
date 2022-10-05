@@ -2,11 +2,12 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+require("dotenv").config();
 
 app.use(cookieParser());
 app.use(
   cors({
-    origin: ["*", "http://localhost:3000"],
+    origin: ["*", process.env.localhost],
     credentials: true,
   })
 );
@@ -45,5 +46,5 @@ app.get("/", (req, res) => {
 
 const port = process.env.port || 4000;
 app.listen(port, () => {
-  console.log("server is listening on port 4000...");
+  console.log(`upload server is listening on port ${port}...`);
 });

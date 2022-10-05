@@ -5,9 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js",
-    "dev": "pm2 start server.js --name \"Upload-API\" --watch --ignore-watch=\"mediaUpload\"",
-    "prod": "pm2 start server.js --name \"Upload-API\""
+    "start": "node app.js",
+    "dev": "pm2 start app.js --name \"Upload-API\" --watch --ignore-watch=\"mediaUpload\"",
+    "prod": "pm2 start app.js --name \"Upload-API\""
   },
   "keywords": [],
   "author": "",
@@ -17,6 +17,7 @@
     "axios": "^0.27.2",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
     "express": "^4.18.1",
     "express-formidable": "^1.2.0",
     "jimp": "^0.16.2",
@@ -25,5 +26,9 @@
     "nodemon": "^2.0.19",
     "pm2": "^5.2.0",
     "uuid": "^9.0.0"
+  },
+  "engines": {
+    "npm": ">=8.0.0",
+    "node": ">=16.0.0"
   }
 }

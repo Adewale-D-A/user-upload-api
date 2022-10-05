@@ -68,3 +68,6 @@
 
 - On VPC Security tab on mysql DB tab and add inbound rule to include All trafic(0.0.0.0/00)
 - make db publicly accessible
+
+Elastic Beanstalk
+set environment variable port number to 8080

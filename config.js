@@ -1,17 +1,19 @@
+require("dotenv").config();
+
 const credentials = {
-  accessKeyId: "AKIA3FHTGZ4UBQMKVMOG",
-  secretAccessKey: "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",
-  region: "us-east-1",
+  accessKeyId: process.env.accessKeyId,
+  secretAccessKey: process.env.secretAccessKey,
+  region: process.env.region,
 };
 
 const bucketCredentials = {
-  signatureVersion: "v4",
-  apiVersion: "2006-03-01",
-  accessKeyId: "AKIA3FHTGZ4UBQMKVMOG",
-  secretAccessKey: "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",
+  signatureVersion: process.env.signatureVersion,
+  apiVersion: process.env.apiVersion,
+  accessKeyId: process.env.accessKeyId,
+  secretAccessKey: process.env.secretAccessKey,
 };
 
-const jwtSecretKey = "AKIA3FHTGZ4UBQMKVMOG";
+const jwtSecretKey = process.env.jwtSecretKey;
 
 exports.credentials = credentials;
 exports.jwtSecretKey = jwtSecretKey;
