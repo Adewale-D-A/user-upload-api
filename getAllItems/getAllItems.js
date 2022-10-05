@@ -10,7 +10,7 @@ const doClient = new AWS.DynamoDB.DocumentClient(credentials);
 const { presignedGETurl } = require("../BucketFunctions/S3BucketMethods");
 
 router.get("/getAllItems", (req, res) => {
-  const requestToken = req.cookies.token;
+  const requestToken = req.get("Authorization")?.split(" ")[1];
 
   if (!requestToken) {
     res.status(400).send({
