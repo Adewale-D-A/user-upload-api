@@ -20,7 +20,8 @@ router.get("/getAllItems", (req, res) => {
   if (requestToken) {
     jwt.verify(requestToken, jwtSecretKey, (err, decode) => {
       if (err) {
-        console.log("error");
+        console.log("error, token not accepted");
+        console.log(err);
         res.status(400).send({
           success: false,
           message: "Access Token is invalid",

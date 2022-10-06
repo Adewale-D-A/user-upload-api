@@ -24,16 +24,18 @@ const update = require("./updateItem/updateItem");
 const batchGet = require("./batchGet/batchGet");
 
 //ACTIVE ENDPOINTS
-//getAllItems endpoint
+//getAllItems endpoint for a single user
 app.use("/getAll", getAll);
 //put item into table endpoint
 app.use("/put", put);
 
+//get all items from all users
+app.use("/getAllUser", batchGet);
 //delete table endpoint
 app.use("/deleteTable", delTable);
 //delete item in a table endpoint
 app.use("/deleteItem", delItem);
-//get a single Item endpoint
+//get a single Item endpoint from a single user
 app.use("/get", get);
 //query item endpoint
 app.use("/query", query);
