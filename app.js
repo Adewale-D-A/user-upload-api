@@ -46,7 +46,7 @@ app.get("/", (req, res) => {
   res.status(200).send("User Upload API");
 });
 
-const port = process.env.port || 4000;
+const port = process.env.PORT || 8080;
 app.listen(port, () => {
   console.log(`upload server is listening on port ${port}...`);
 });
