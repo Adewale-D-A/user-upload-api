@@ -7,7 +7,7 @@ require("dotenv").config();
 app.use(cookieParser());
 app.use(
   cors({
-    origin: ["*", process.env.localhost],
+    origin: ["*", process.env.LOCALHOST],
     credentials: true,
   })
 );
