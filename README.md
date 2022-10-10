@@ -1,4 +1,4 @@
-# Express JS User Upload Backend Server using AWS Dynamo DB and Elastic Beanstalk <a href="http://user-upload-api.us-east-1.elasticbeanstalk.com/" target="_blank">server endpoint</a>
+# Express JS User Upload Backend Server using AWS Dynamo DB and Elastic Beanstalk<a href="http://user-upload-api.us-east-1.elasticbeanstalk.com/" target="_blank">(server endpoint)</a>
 
 ## Methods for CRUD operations inside table
 
