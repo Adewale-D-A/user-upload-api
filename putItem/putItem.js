@@ -31,7 +31,7 @@ const { credentials, jwtSecretKey } = require("../config");
 const doClient = new AWS.DynamoDB.DocumentClient(credentials);
 
 router.put("/putItem", upload.single("mediaUpload"), (req, res) => {
-  const { itemDescription } = req.body;
+  const { itemDescription, uploadTitle, uploadPrice, uploadType } = req.body;
   const requestToken = req.get("Authorization")?.split(" ")[1];
   // const requestToken = req.cookies.token;
 
@@ -62,7 +62,13 @@ router.put("/putItem", upload.single("mediaUpload"), (req, res) => {
         const userId = decode.id;
         const dateTime = new Date().toISOString();
 
-        if (itemDescription && req.file.mimetype.match("image")) {
+        if (
+          itemDescription.length > 0 &&
+          req.file.mimetype.match("image") &&
+          uploadTitle &&
+          !isNaN(uploadPrice) &&
+          uploadType
+        ) {
           const mimetype = req.file.mimetype.toLowerCase();
           if (
             mimetype === "image/jpeg" ||
@@ -126,6 +132,9 @@ router.put("/putItem", upload.single("mediaUpload"), (req, res) => {
                                       const payload = {
                                         id: uuidv4(),
                                         description: itemDescription,
+                                        uploadTitle: uploadTitle,
+                                        uploadPrice: uploadPrice,
+                                        uploadType: uploadType,
                                         mediaUpload: req.file.filename,
                                         mediaThumbnail: `thumbnail${req.file.filename}`,
                                         filetype: req.file.mimetype,
@@ -258,7 +267,13 @@ router.put("/putItem", upload.single("mediaUpload"), (req, res) => {
               },
             });
           }
-        } else if (itemDescription && req.file.mimetype.match("video")) {
+        } else if (
+          itemDescription.length > 0 &&
+          req.file.mimetype.match("video") &&
+          uploadTitle &&
+          !isNaN(uploadPrice) &&
+          uploadType
+        ) {
           const presignedUrl = presignedPUTurl(
             "node-server-bucket",
             `userUploads/${userId}/${req.file.filename}`,
@@ -278,6 +293,9 @@ router.put("/putItem", upload.single("mediaUpload"), (req, res) => {
                   const payload = {
                     id: uuidv4(),
                     description: itemDescription,
+                    uploadTitle: uploadTitle,
+                    uploadPrice: uploadPrice,
+                    uploadType: uploadType,
                     mediaUpload: req.file.filename,
                     filetype: req.file.mimetype,
                     dateCreated: dateTime,
@@ -352,6 +370,9 @@ router.put("/putItem", upload.single("mediaUpload"), (req, res) => {
             data: {
               itemDescription: "post description is required",
               mediaUpload: "media file is required",
+              uploadTitle: "Upload Title field is required",
+              uploadPrice: "Price field must be a number",
+              uploadType: "upload type field is required",
             },
           });
         }
